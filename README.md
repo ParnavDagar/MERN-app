@@ -1,14 +1,17 @@
-# Full-Stack Application Deployment Guide
+# Mern Application Deployment Guide
 
-- This guide provides step-by-step instructions for deploying a full-stack application on AWS cloud, including configuring an NGINX server. This deployment allows you to host your application on a single server. 
-- The application is a full-stack web application that offers user authentication and interaction. Users can register, log in, and access personalized features. It provides a secure and user-friendly platform for managing and interacting with data, all while ensuring data integrity and confidentiality. The frontend, built with React, offers an intuitive user interface, while the backend, powered by Node.js and Express, manages data processing and communication with the RDS MySQL database. The NGINX enhances performance and security. This application serves as a foundation for developing dynamic and data-driven web services.
+- This guide offers a detailed walkthrough for deploying a full-stack web application on the AWS cloud, incorporating NGINX server configuration.
+- The application features comprehensive user authentication and interaction capabilities, including user registration, login, and access to personalized functionalities.
+- It prioritizes security, user-friendliness, and data integrity, making it a reliable platform for data management and interaction.
+- The frontend utilizes React for an intuitive user interface, while the backend, powered by Node.js and Express, handles data processing and communicates with an RDS MySQL database.
+- NGINX is employed to enhance both performance and security.
+- This application can serve as a solid foundation for the development of dynamic and data-driven web services.
 
 ## Prerequisites
 
 Before you begin, you should have the following:
 
 - An AWS account with RDS MySQL, EC2(local machine can be used instead), and security groups set up.
-- The [Full-Stack MERN Deployment Repository](https://github.com/shamim-iq/fullstack-mern-nginx-deployment).
 - Basic knowledge of AWS services and the command line.
 
 ## Deployment Steps
@@ -18,24 +21,21 @@ Before you begin, you should have the following:
    - Create an RDS MySQL database in your AWS account.
    - Launch an EC2 instance according to your preferences.
 
-2. **Clone the Project Repository**:
+2. **Install Required Software**:
 
-   - Clone the project repository from GitHub using the following command:
-     ```
-     git clone https://github.com/shamim-iq/fullstack-mern-nginx-deployment.git
-     ```
+   - Install Node.js, npm, and MySQL on your EC2 instance.
 
-3. **Navigate to the Project Directory**:
+3. **Clone the Project Repository**:
+
+   - Clone the project repository from GitHub using "Git Clone" command
+
+4. **Navigate to the Project Directory**:
 
    - Change your current directory to the project directory:
      ```
      cd fullstack-mern-nginx-deployment
      ```
-
-4. **Install Required Software**:
-
-   - Install Node.js, npm, and MySQL on your EC2 instance.
-
+     
 5. **Edit the Server Configuration**:
 
    - Navigate to the `/server` directory and edit the `server.js` file to configure the MySQL database connection with your RDS instance.
@@ -53,7 +53,14 @@ Before you begin, you should have the following:
 
    - Connect to your RDS MySQL database using the MySQL command-line client:
      ```
-     mysql -h <RDS_Endpoint> -P 3306 -u <user_name> -p
+     mysql -h <RDS_Endpoint> -P 3306 -u <user_name> -p 
+     ```
+     
+6. **Create a Database**:
+
+   - Create the database you want to use:
+     ```
+     Create <db_name>
      ```
 
 7. **Select Database**:
@@ -68,13 +75,6 @@ Before you begin, you should have the following:
    - Create a table named "users" with two columns: "username" and "password".
      ```
      CREATE TABLE users (username VARCHAR(20), password VARCHAR(20));
-     ```
-
-9. **Edit Client Configuration**:
-
-   - Navigate to the `/client` directory and add a "proxy" line in the `package.json` file to specify the backend server's URL:
-     ```
-     "proxy": "http://<instance_public_ip>:3001/"
      ```
 
 10. **Start the Frontend**:
@@ -96,26 +96,31 @@ Before you begin, you should have the following:
 
 13. **Install NGINX and Configure Firewall**:
 
-    - Install NGINX on your EC2 instance and ensure that the necessary ports are allowed on the firewall.
+    - Install NGINX on your EC2 instance and ensure that the necessary ports are allowed in the security group.
 
 14. **Edit NGINX Configuration**:
 
     - Use a text editor to edit the NGINX configuration file:
       ```
-      sudo nano /etc/nginx/sites-available/default
+      sudo vim /etc/nginx/sites-available/default
       ```
 
 15. **NGINX Configuration**:
 
     - Edit the file with the following configuration, replacing `<instance_public_ip>` with your instance's public IP address:
       ```
-      server_name <instance_public_ip>;
+      server_name localhost;
 
       location / {
-      proxy_pass http://<instance_public_ip>:3000;
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      }
+                proxy_pass http://localhost:3000; # Redirects the traffic to port 3000 where Node.js app is running
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+       }
       ```
 16. **Remove Default NGINX Configuration**:
 
@@ -152,4 +157,3 @@ Before you begin, you should have the following:
 ## Conclusion
 
 Following these steps will enable you to deploy a full-stack application with NGINX on AWS. Remember to replace placeholders like `<instance_public_ip>`, `<RDS_Endpoint>`, `<user_name>`, and `<db_name>` with your specific configuration details. You can now access your application via your EC2 instance's public IP address.
-
